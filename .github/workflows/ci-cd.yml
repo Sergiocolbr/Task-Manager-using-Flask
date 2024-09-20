@@ -2,9 +2,9 @@ name: FUll pipeline3
 
 on:
   push:
-    branches: [ "master", "staging", "development" ]
+    branches: [ "main", "staging", "development" ]
   pull_request:
-    branches: [ "master", "staging", "development" ]
+    branches: [ "main", "staging", "development" ]
 
 permissions:
   contents: write
@@ -61,7 +61,6 @@ jobs:
            sudo mv dependency-check /usr/local/bin/
            sudo chmod +x /usr/local/bin/dependency-check/bin/dependency-check.sh
 
-
       - name: Run Dependency Check
         run: |
           /usr/local/bin/dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe"
@@ -75,7 +74,7 @@ jobs:
   autotag:
     runs-on: ubuntu-24.04
     needs: [build, test]
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
