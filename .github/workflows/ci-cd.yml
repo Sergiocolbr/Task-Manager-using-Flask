@@ -53,10 +53,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Dependency Check
         run: |
-           wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
-           unzip dependency-check-10.0.4-release.zip
-           sudo mv dependency-check /usr/local/bin/
-           sudo chmod +x /usr/local/bin/dependency-check/bin/dependency-check.sh
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip dependency-check-10.0.4-release.zip
+          sudo mv dependency-check /usr/local/bin/
+          sudo chmod +x /usr/local/bin/dependency-check/bin/dependency-check.sh
       - name: Run Dependency Check
         run: |
           /usr/local/bin/dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe"
@@ -80,5 +80,7 @@ jobs:
         run: |
           npm install -g semantic-release @semantic-release/git @semantic-release/commit-analyzer @semantic-release/release-notes-generator
       - name: Generate version and release notes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Adicione isso para usar o token
         run: |
           npx semantic-release
