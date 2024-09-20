@@ -44,9 +44,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Test1 with pytest
+      - name: Run tests with pytest
         run: |
-          pytest
+          pytest todo_project/todo_project/
 
   dependency-check:
     runs-on: ubuntu-24.04
