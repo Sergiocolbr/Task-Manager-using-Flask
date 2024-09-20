@@ -1,4 +1,16 @@
-{
+  "name": "task-manager",                     // Nome do pacote
+  "version": "1.0.0",                         // Versão inicial
+  "description": "Gerenciador de tarefas em Flask", // Descrição do projeto
+  "main": "index.js",                         // Ponto de entrada (se necessário)
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sergiocolbr/Task-Manager-using-Flask.git" // URL do repositório
+  },
+  "author": "Sergiocolbr",                       // Seu nome ou o autor do projeto
+  "license": "MIT",                           // Licença do projeto
   "devDependencies": {
     "semantic-release": "^24.1.1"
   }
