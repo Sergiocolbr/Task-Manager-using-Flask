@@ -1,4 +1,4 @@
-name: FUll pipeline3
+name: Full pipeline3
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Run tests with pytest
         run: |
-          pytest todo_project/todo_project/
+          pytest todo_project/tests/
 
   dependency-check:
     runs-on: ubuntu-24.04
