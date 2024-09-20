@@ -81,6 +81,7 @@ jobs:
           npm install -g semantic-release @semantic-release/git @semantic-release/commit-analyzer @semantic-release/release-notes-generator
       - name: Generate version and release notes
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Adicione isso para usar o token
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Usar o token do GitHub
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}  # Usar o token do NPM
         run: |
           npx semantic-release
