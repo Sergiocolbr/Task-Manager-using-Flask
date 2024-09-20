@@ -2,9 +2,9 @@ name: Full pipeline4
 
 on:
   push:
-    branches: [ "master", "staging", "development" ]
+    branches: [ "main", "staging", "development" ]
   pull_request:
-    branches: [ "master", "staging", "development" ]
+    branches: [ "main", "staging", "development" ]
 
 permissions:
   contents: write
@@ -42,7 +42,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Test1 with pytest
+      - name: Test with pytest
         run: |
           pytest
 
@@ -69,7 +69,7 @@ jobs:
   versioning:
     runs-on: ubuntu-24.04
     needs: [build, test]
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
