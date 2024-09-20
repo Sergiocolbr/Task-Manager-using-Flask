@@ -1,10 +1,10 @@
-name: Full pipeline3
+name: Full pipeline4
 
 on:
   push:
-    branches: [ "main", "staging", "development" ]
+    branches: [ "master", "staging", "development" ]
   pull_request:
-    branches: [ "main", "staging", "development" ]
+    branches: [ "master", "staging", "development" ]
 
 permissions:
   contents: write
@@ -12,7 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.9
@@ -32,7 +31,6 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     needs: build
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.9
@@ -44,14 +42,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Run tests with pytest
+      - name: Test1 with pytest
         run: |
-          pytest tests/
+          pytest
 
   dependency-check:
     runs-on: ubuntu-24.04
     needs: build
-
     steps:
       - uses: actions/checkout@v4
       - name: Install Dependency Check
@@ -60,28 +57,28 @@ jobs:
            unzip dependency-check-10.0.4-release.zip
            sudo mv dependency-check /usr/local/bin/
            sudo chmod +x /usr/local/bin/dependency-check/bin/dependency-check.sh
-
       - name: Run Dependency Check
         run: |
           /usr/local/bin/dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe"
-
       - name: Upload Dependency Check Report
         uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
           path: ./dependency-check-report
 
-  autotag:
+  versioning:
     runs-on: ubuntu-24.04
     needs: [build, test]
-    if: github.ref == 'refs/heads/main'
-
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-      - name: Integração
-        uses: Jorricks/action-python-autotagging@1.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: todo_project/todo_project/__init__.py
-          variable: tag_version
-          prefix: v
+          node-version: '18'  # Atualizado para a versão 18
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release @semantic-release/git @semantic-release/commit-analyzer @semantic-release/release-notes-generator
+      - name: Generate version and release notes
+        run: |
+          npx semantic-release
