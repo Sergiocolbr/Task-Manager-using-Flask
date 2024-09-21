@@ -1,8 +1,16 @@
+name: My Workflow
+
 on:
   push:
-    branches: [ "main", "staging", "development" ]
+    branches: 
+      - main
+      - staging
+      - development
   pull_request:
-    branches: [ "main", "staging", "development" ]
+    branches: 
+      - main
+      - staging
+      - development
 
 permissions:
   contents: write
