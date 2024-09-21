@@ -1,3 +1,38 @@
+Para integrar o Bandit ao seu workflow do GitHub Actions, você pode adicionar um novo job que instala o Bandit e o executa para analisar o código. Aqui está um exemplo de como você pode fazer isso:
+Passo 1: Adicionar o job do Bandit
+
+Você pode adicionar um job chamado bandit-check ao seu arquivo de workflow. Aqui está como você pode estruturá-lo:
+
+yaml
+
+  bandit-check:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+      - name: Run Bandit
+        run: |
+          bandit -r . -f json -o bandit_report.json
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit_report.json
+
+Passo 2: Atualizar o arquivo completo
+
+Aqui está como seu workflow completo poderia parecer com a inclusão do Bandit:
+
+yaml
+
 name: Full pipeline4
 
 on:
@@ -66,21 +101,24 @@ jobs:
           name: dependency-check-report
           path: ./dependency-check-report
 
-  autotag:
+  bandit-check:
     runs-on: ubuntu-24.04
-    needs: [build, test]
-    if: github.ref == 'refs/heads/main'
+    needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'  
-      - name: Install autotag
+          python-version: "3.9"
+      - name: Install Bandit
         run: |
-          npm install -g autotag
-      - name: Generate tag
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Usar o token do GitHub
+          python -m pip install --upgrade pip
+          pip install bandit
+      - name: Run Bandit
         run: |
-          autotag
+          bandit -r . -f json -o bandit_report.json
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit_report.json
