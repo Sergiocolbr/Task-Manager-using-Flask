@@ -50,7 +50,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Test with pytest
         run: |
-          pytest || true
+          pytest
 
   static-code-analysis:
     runs-on: ubuntu-24.04
@@ -67,7 +67,7 @@ jobs:
           pip install bandit
       - name: Run Bandit
         run: |
-          bandit -r . -f json -o bandit_report.json || true
+          bandit -r . -f json -o bandit_report.json
       - name: Upload Bandit Report
         uses: actions/upload-artifact@v3
         with:
@@ -138,11 +138,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install OWASP ZAP
         run: |
-          sudo apt-get update || true
-          sudo apt-get install zaproxy -y || true
+          sudo apt-get update
+          sudo apt-get install zaproxy -y
       - name: Run OWASP ZAP DAST
         run: |
-          ./zap.sh -cmd -quickurl http://127.0.0.1:5000/ -quickout ./relatorio.html -port 8081 || true
+          ./zap.sh -cmd -quickurl http://127.0.0.1:5000/ -quickout ./relatorio.html -port 8081
       - name: Upload OWASP ZAP Report
         uses: actions/upload-artifact@v3
         with:
@@ -158,15 +158,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:graylog/graylog-4.2 || true
+          sudo add-apt-repository ppa:graylog/graylog-4.2
           sudo apt-get update
 
       - name: Instalar Graylog e dependências
         run: |
-          sudo apt-get install graylog-server -y || true
-          sudo graylog-ctl set-admin-password ${{ secrets.GRAYLOG_PASSWORD_SECRET }} || true
-          sudo graylog-ctl start || true
+          sudo apt-get install graylog-server -y
+          sudo graylog-ctl set-admin-password ${{ secrets.GRAYLOG_PASSWORD_SECRET }}
+          sudo graylog-ctl start
 
       - name: Configurar Graylog
         run: |
           echo "Configurações do Graylog realizadas com sucesso."
+
