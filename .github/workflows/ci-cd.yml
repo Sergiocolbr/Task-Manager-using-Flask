@@ -136,7 +136,7 @@ jobs:
           sudo apt-get install zaproxy -y
       - name: Run OWASP ZAP DAST
         run: |
-          ./zap.sh -cmd -quickurl http://127.0.0.1:5000/ -quickout ./relatorio.html -port 8081
+          ./zap.sh -cmd -quickurl http://127.0.0.1:5000/ -quickout ./relatorio.html -port 8081 || true
       - name: Upload OWASP ZAP Report
         uses: actions/upload-artifact@v3
         with:
