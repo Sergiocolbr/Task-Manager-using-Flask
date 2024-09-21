@@ -106,39 +106,3 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Usar o token do GitHub
         run: |
           autotag
-
-  review:
-    runs-on: ubuntu-24.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to Review Environment
-        run: |
-          echo "Deploying to temporary review environment..."
-
-  deploy-staging:
-    runs-on: ubuntu-24.04
-    needs: review
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to Staging Environment
-        run: |
-          echo "Deploying to staging environment..."
-
-  dast:
-    runs-on: ubuntu-24.04
-    needs: deploy-staging
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install OWASP ZAP
-        run: |
-          sudo apt-get update
-          sudo apt-get install zaproxy -y
-      - name: Run OWASP ZAP DAST
-        run: |
-          zap.sh -quickurl http://staging-env-url -quickout zap_report.html
-      - name: Upload OWASP ZAP Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: zap-report
-          path: zap_report.html

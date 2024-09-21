@@ -1,135 +1,157 @@
-import unittest
+from flask import render_template, url_for, flash, redirect, request
+
 from todo_project import app, db, bcrypt
+
+# Import the forms
+from todo_project.forms import (LoginForm, RegistrationForm, UpdateUserInfoForm, 
+                                UpdateUserPassword, TaskForm, UpdateTaskForm)
+
+# Import the Models
 from todo_project.models import User, Task
 
-class TestViews(unittest.TestCase):
+# Import 
+from flask_login import login_required, current_user, login_user, logout_user
 
-    @classmethod
-    def setUpClass(cls):
-        """Set up a testing Flask application and in-memory SQLite database."""
-        app.config['TESTING'] = True
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['SECRET_KEY'] = 'test_secret_key'  # Required for Flask-Login
-        app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
-        cls.app = app
 
-    def setUp(self):
-        # Set up an application context and initialize the database
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        db.create_all()
-        self.client = self.app.test_client()
+@app.errorhandler(404)
+def error_404(error):
+    return (render_template('errors/404.html'), 404)
 
-        # Create a test user
-        self.test_user = User(username='testuser', password=bcrypt.generate_password_hash('password123').decode('utf-8'))
-        db.session.add(self.test_user)
+@app.errorhandler(403)
+def error_403(error):
+    return (render_template('errors/403.html'), 403)
+
+@app.errorhandler(500)
+def error_500(error):
+    return (render_template('errors/500.html'), 500)
+
+
+@app.route("/")
+@app.route("/about")
+def about():
+    return render_template('about.html', title='About')
+
+
+@app.route("/login", methods=['POST', 'GET'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('all_tasks'))
+
+    form = LoginForm()
+    # After you submit the form
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        # Check if the user exists and the password is valid
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            task_form = TaskForm()
+            flash('Login Successfull', 'success')
+            return redirect(url_for('all_tasks'))
+        else:
+            flash('Login Unsuccessful. Please check Username Or Password', 'danger')
+    
+    return render_template('login.html', title='Login', form=form)
+    
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+
+@app.route("/register", methods=['POST', 'GET'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('all_tasks'))
+
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user = User(username=form.username.data, password=hashed_password)
+        db.session.add(user)
         db.session.commit()
+        flash(f'Account Created For {form.username.data}', 'success')
+        return redirect(url_for('login'))
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
+    return render_template('register.html', title='Register', form=form)
 
-    def login(self, username, password):
-        """Helper method to log in a test user."""
-        return self.client.post('/login', data=dict(
-            username=username,
-            password=password
-        ), follow_redirects=True)
 
-    def logout(self):
-        """Helper method to log out the current user."""
-        return self.client.get('/logout', follow_redirects=True)
+@app.route("/all_tasks")
+@login_required
+def all_tasks():
+    tasks = User.query.filter_by(username=current_user.username).first().tasks
+    return render_template('all_tasks.html', title='All Tasks', tasks=tasks)
 
-    def test_home_page(self):
-        # Test that the home page loads successfully
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'About', response.data)
 
-    def test_registration(self):
-        # Test user registration
-        response = self.client.post('/register', data=dict(
-            username='newuser',
-            password='password123',
-            confirm_password='password123'
-        ), follow_redirects=True)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Account Created For newuser', response.data)
-        user = User.query.filter_by(username='newuser').first()
-        self.assertIsNotNone(user)
-
-    def test_login(self):
-        # Test login functionality
-        response = self.login('testuser', 'password123')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Login Successfull', response.data)
-
-    def test_failed_login(self):
-        # Test login with incorrect credentials
-        response = self.login('testuser', 'wrongpassword')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Login Unsuccessful. Please check Username Or Password', response.data)
-
-    def test_logout(self):
-        # Test logout functionality
-        self.login('testuser', 'password123')
-        response = self.logout()
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Login', response.data)
-
-    def test_add_task(self):
-        # Test adding a new task
-        self.login('testuser', 'password123')
-        response = self.client.post('/add_task', data=dict(
-            task_name='Test Task'
-        ), follow_redirects=True)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Task Created', response.data)
-        task = Task.query.filter_by(content='Test Task').first()
-        self.assertIsNotNone(task)
-
-    def test_update_task(self):
-        # Test updating an existing task
-        self.login('testuser', 'password123')
-        task = Task(content='Initial Task', author=self.test_user)
+@app.route("/add_task", methods=['POST', 'GET'])
+@login_required
+def add_task():
+    form = TaskForm()
+    if form.validate_on_submit():
+        task = Task(content=form.task_name.data, author=current_user)
         db.session.add(task)
         db.session.commit()
+        flash('Task Created', 'success')
+        return redirect(url_for('add_task'))
+    return render_template('add_task.html', form=form, title='Add Task')
 
-        response = self.client.post(f'/all_tasks/{task.id}/update_task', data=dict(
-            task_name='Updated Task'
-        ), follow_redirects=True)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Task Updated', response.data)
-        updated_task = Task.query.get(task.id)
-        self.assertEqual(updated_task.content, 'Updated Task')
+@app.route("/all_tasks/<int:task_id>/update_task", methods=['GET', 'POST'])
+@login_required
+def update_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    form = UpdateTaskForm()
+    if form.validate_on_submit():
+        if form.task_name.data != task.content:
+            task.content = form.task_name.data
+            db.session.commit()
+            flash('Task Updated', 'success')
+            return redirect(url_for('all_tasks'))
+        else:
+            flash('No Changes Made', 'warning')
+            return redirect(url_for('all_tasks'))
+    elif request.method == 'GET':
+        form.task_name.data = task.content
+    return render_template('add_task.html', title='Update Task', form=form)
 
-    def test_delete_task(self):
-        # Test deleting a task
-        self.login('testuser', 'password123')
-        task = Task(content='Task to Delete', author=self.test_user)
-        db.session.add(task)
-        db.session.commit()
 
-        response = self.client.get(f'/all_tasks/{task.id}/delete_task', follow_redirects=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Task Deleted', response.data)
-        deleted_task = Task.query.get(task.id)
-        self.assertIsNone(deleted_task)
+@app.route("/all_tasks/<int:task_id>/delete_task")
+@login_required
+def delete_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    db.session.delete(task)
+    db.session.commit()
+    flash('Task Deleted', 'info')
+    return redirect(url_for('all_tasks'))
 
-    def test_change_password(self):
-        # Test changing user password
-        self.login('testuser', 'password123')
-        response = self.client.post('/account/change_password', data=dict(
-            old_password='password123',
-            new_password='newpassword'
-        ), follow_redirects=True)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Password Changed Successfully', response.data)
+@app.route("/account", methods=['POST', 'GET'])
+@login_required
+def account():
+    form = UpdateUserInfoForm()
+    if form.validate_on_submit():
+        if form.username.data != current_user.username:  
+            current_user.username = form.username.data
+            db.session.commit()
+            flash('Username Updated Successfully', 'success')
+            return redirect(url_for('account'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username 
 
-if __name__ == '__main__':
-    unittest.main()
+    return render_template('account.html', title='Account Settings', form=form)
+
+
+@app.route("/account/change_password", methods=['POST', 'GET'])
+@login_required
+def change_password():
+    form = UpdateUserPassword()
+    if form.validate_on_submit():
+        if bcrypt.check_password_hash(current_user.password, form.old_password.data):
+            current_user.password = bcrypt.generate_password_hash(form.new_password.data).decode('utf-8')
+            db.session.commit()
+            flash('Password Changed Successfully', 'success')
+            redirect(url_for('account'))
+        else:
+            flash('Please Enter Correct Password', 'danger') 
+
+    return render_template('change_password.html', title='Change Password', form=form)
