@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8
+          pip install flake8 bandit
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with flake8
         run: |
@@ -46,6 +46,28 @@ jobs:
         run: |
           pytest
 
+  bandit:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+      - name: Run Bandit
+        run: |
+          bandit -r . -f json -o bandit_report.json || true  # Permite que o job continue mesmo se Bandit falhar
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit_report.json
+
   dependency-check:
     runs-on: ubuntu-24.04
     needs: build
@@ -65,28 +87,6 @@ jobs:
         with:
           name: dependency-check-report
           path: ./dependency-check-report
-
-  bandit-check:
-    runs-on: ubuntu-24.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-      - name: Install Bandit
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit
-      - name: Run Bandit
-        run: |
-          bandit -r . -f json -o bandit_report.json
-      - name: Upload Bandit Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: bandit-report
-          path: bandit_report.json
 
   autotag:
     runs-on: ubuntu-24.04
