@@ -149,14 +149,20 @@ jobs:
           name: zap-report
           path: zap_report.html
   
-  Monitoramento_e_Security:
+  monitoramento_e_Security:
     runs-on: ubuntu-24.04
     needs: deploy-staging
     steps:
       - uses: actions/checkout@v4
-      - name: Instalar Graylog
+      - name: Adicionar repositório Graylog
         run: |
           sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:graylog/graylog-4.2
+          sudo apt-get update
+
+      - name: Instalar Graylog e dependências
+        run: |
           sudo apt-get install graylog-server -y
           sudo graylog-ctl set-admin-password ${{ secrets.GRAYLOG_PASSWORD_SECRET }}
           sudo graylog-ctl start
