@@ -46,7 +46,7 @@ jobs:
         run: |
           pytest
 
-  bandit:
+  static-code-analysis:
     runs-on: ubuntu-24.04
     needs: build
     steps:
@@ -68,18 +68,18 @@ jobs:
           name: bandit-report
           path: bandit_report.json
 
-  dependency-check:
+  dependency-analysis:
     runs-on: ubuntu-24.04
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Install Dependency Check
+      - name: Install OWASP Dependency Check
         run: |
           wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
           unzip dependency-check-10.0.4-release.zip
           sudo mv dependency-check /usr/local/bin/
           sudo chmod +x /usr/local/bin/dependency-check/bin/dependency-check.sh
-      - name: Run Dependency Check
+      - name: Run OWASP Dependency Check
         run: |
           /usr/local/bin/dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe"
       - name: Upload Dependency Check Report
