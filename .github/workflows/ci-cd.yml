@@ -61,7 +61,7 @@ jobs:
           pip install bandit
       - name: Run Bandit
         run: |
-          bandit -r . -f json -o bandit_report.json || true  # Permite que o job continue mesmo se Bandit falhar
+          bandit -r . -f json -o bandit_report.json || true
       - name: Upload Bandit Report
         uses: actions/upload-artifact@v3
         with:
@@ -103,7 +103,7 @@ jobs:
           npm install -g autotag
       - name: Generate tag
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # Usar o token do GitHub
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           autotag
 
