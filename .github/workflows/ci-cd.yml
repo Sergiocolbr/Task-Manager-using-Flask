@@ -149,7 +149,7 @@ jobs:
           name: zap-report
           path: zap_report.html
   
-  Monitoramento_e_Segurança:
+  Monitoramento_e_Security:
     runs-on: ubuntu-24.04
     needs: deploy-staging
     steps:
